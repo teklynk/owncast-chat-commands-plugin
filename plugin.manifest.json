@@ -1,0 +1,17 @@
+{
+  "api": "1",
+  "name": "Owncast Chat Commands",
+  "slug": "owncast-chat-commands",
+  "version": "0.1.0",
+  "description": "Manage custom chat commands and timed chat messages from the Owncast admin.",
+  "permissions": ["chat.send", "http.serve", "storage.fs"],
+  "admin": {
+    "pages": {
+      "/admin/*": { "title": "Chat Commands", "icon": "gear" },
+      "/admin/timed-messages/*": { "title": "Timed Messages", "icon": "bell" }
+    }
+  },
+  "bot": {
+    "displayName": "tekbot"
+  }
+}
