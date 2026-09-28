@@ -179,12 +179,12 @@
             }, { type: "number", min: 0, max: 86400 }),
           );
 
-          section.append(
-            fields,
-            makeField("Replies (one per line, up to 10)", command.messages.join("\n"), (value) => {
-              command.messages = value.split("\n");
-            }, { multiline: true }),
-          );
+          const replyField = makeField("Reply", command.message, (value) => {
+            command.message = value;
+          }, { multiline: true });
+          replyField.querySelector("textarea").maxLength = 300;
+
+          section.append(fields, replyField);
 
           const remove = document.createElement("button");
           remove.type = "button";
@@ -217,7 +217,7 @@
       }
 
       document.querySelector("#add-command").addEventListener("click", () => {
-        commands.push({ command: "!new-command", messages: ["Add a reply"], cooldownSeconds: 0, enabled: true });
+        commands.push({ command: "!new-command", message: "Add a reply", cooldownSeconds: 0, enabled: true });
         render();
       });
 

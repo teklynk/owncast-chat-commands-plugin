@@ -4,12 +4,12 @@ const COMMANDS_FILE = "commands.json";
 const TIMED_MESSAGES_FILE = "timed-messages.json";
 const MAX_COMMANDS = 100;
 const MAX_TIMED_MESSAGES = 50;
-const MAX_MESSAGES_PER_COMMAND = 10;
 const MAX_MESSAGE_LENGTH = 500;
+const MAX_TIMED_MESSAGE_LENGTH = 300;
 const DEFAULT_COMMANDS = [
   {
     command: "!donate",
-    messages: ["Thanks for asking! Update this reply with your donation link."],
+    message: "Thanks for asking! Update this reply with your donation link.",
     cooldownSeconds: 30,
   },
 ];
@@ -22,7 +22,6 @@ function validateCommands(value) {
     throw new Error(`Commands must be an array with at most ${MAX_COMMANDS} entries.`);
   }
 
-  const seen = new Set();
   return value.map((item) => {
     if (!item || typeof item.command !== "string") {
       throw new Error("Each command needs a command name.");
@@ -32,21 +31,9 @@ function validateCommands(value) {
     if (!/^[a-z0-9_-]{1,32}$/.test(name)) {
       throw new Error("Command names may contain letters, numbers, _ and - only.");
     }
-    if (seen.has(name)) throw new Error(`Duplicate command: !${name}`);
-    seen.add(name);
 
-    if (
-      !Array.isArray(item.messages) ||
-      item.messages.length === 0 ||
-      item.messages.length > MAX_MESSAGES_PER_COMMAND ||
-      item.messages.some(
-        (message) =>
-          typeof message !== "string" ||
-          !message.trim() ||
-          message.trim().length > MAX_MESSAGE_LENGTH,
-      )
-    ) {
-      throw new Error(`!${name} needs 1-${MAX_MESSAGES_PER_COMMAND} messages of at most ${MAX_MESSAGE_LENGTH} characters.`);
+    if (typeof item.message !== "string" || !item.message.trim() || item.message.trim().length > MAX_MESSAGE_LENGTH) {
+      throw new Error(`!${name} reply must be 1-${MAX_MESSAGE_LENGTH} characters.`);
     }
 
     const cooldownSeconds = Number(item.cooldownSeconds);
@@ -59,7 +46,7 @@ function validateCommands(value) {
 
     return {
       command: `!${name}`,
-      messages: item.messages.map((message) => message.trim()),
+      message: item.message.trim(),
       cooldownSeconds,
       enabled: item.enabled !== false,
     };
@@ -91,8 +78,8 @@ function validateTimedMessages(value) {
     if (seen.has(item.id)) throw new Error(`Duplicate timed message ID: ${item.id}`);
     seen.add(item.id);
 
-    if (typeof item.message !== "string" || !item.message.trim() || item.message.trim().length > MAX_MESSAGE_LENGTH) {
-      throw new Error(`Timed message text must be 1-${MAX_MESSAGE_LENGTH} characters.`);
+    if (typeof item.message !== "string" || !item.message.trim() || item.message.trim().length > MAX_TIMED_MESSAGE_LENGTH) {
+      throw new Error(`Timed message text must be 1-${MAX_TIMED_MESSAGE_LENGTH} characters.`);
     }
     if (item.trigger !== "interval" && item.trigger !== "chat-count") {
       throw new Error("Timed message trigger must be interval or chat-count.");
@@ -204,18 +191,21 @@ module.exports = definePlugin({
 
     try {
       const commandName = `!${match[1].toLowerCase()}`;
-      const command = readCommands().find((item) => item.command === commandName);
-      if (!command || !command.enabled) return;
+      const matchingCommands = readCommands().filter(
+        (item) => item.command === commandName && item.enabled,
+      );
+      if (matchingCommands.length === 0) return;
 
       const cooldownKey = `${msg.user?.id ?? `client:${msg.clientId ?? "anonymous"}`}:${commandName}`;
       const now = Date.now();
       if (now < (cooldowns.get(cooldownKey) ?? 0)) return;
-      if (command.cooldownSeconds > 0) {
-        cooldowns.set(cooldownKey, now + command.cooldownSeconds * 1000);
+      const cooldownSeconds = Math.max(...matchingCommands.map((item) => item.cooldownSeconds));
+      if (cooldownSeconds > 0) {
+        cooldowns.set(cooldownKey, now + cooldownSeconds * 1000);
       }
 
-      const message = command.messages[Math.floor(Math.random() * command.messages.length)];
-      owncast.chat.send(message);
+      const selectedCommand = matchingCommands[Math.floor(Math.random() * matchingCommands.length)];
+      owncast.chat.send(selectedCommand.message);
     } catch (error) {
       owncast.log.error(`Could not handle chat command: ${error.message}`);
     }

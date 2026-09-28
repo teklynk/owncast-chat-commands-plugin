@@ -42,7 +42,7 @@ runScenarios([
           path: "/admin/api/commands",
           authenticated: true,
           body: JSON.stringify([
-            { command: "!schedule", messages: ["Tonight at eight."], cooldownSeconds: 60 },
+            { command: "!schedule", message: "Tonight at eight.", cooldownSeconds: 60 },
           ]),
           expect: { status: 200 },
         },
@@ -51,6 +51,25 @@ runScenarios([
       incomingChat("carol", "!schedule"),
     ],
     expect: { chatSends: ["Tonight at eight."] },
+  },
+  {
+    name: "treats duplicate commands as random multiline replies",
+    events: [
+      {
+        http: {
+          method: "PUT",
+          path: "/admin/api/commands",
+          authenticated: true,
+          body: JSON.stringify([
+            { command: "!schedule", message: "Tonight at eight.\nSee you there!", cooldownSeconds: 0 },
+            { command: "!schedule", message: "Tonight at eight.\nSee you there!", cooldownSeconds: 0 },
+          ]),
+          expect: { status: 200 },
+        },
+      },
+      incomingChat("casey", "!schedule"),
+    ],
+    expect: { chatSends: ["Tonight at eight.\nSee you there!"] },
   },
   {
     name: "does not run a disabled saved command",
@@ -63,7 +82,7 @@ runScenarios([
           body: JSON.stringify([
             {
               command: "!paused",
-              messages: ["This should not be posted."],
+              message: "This should not be posted.",
               cooldownSeconds: 0,
               enabled: false,
             },

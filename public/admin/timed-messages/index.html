@@ -48,10 +48,16 @@
       }
 
       input,
+      textarea,
       select {
         box-sizing: border-box;
         width: 100%;
         font: inherit;
+      }
+
+      textarea {
+        min-height: 6rem;
+        resize: vertical;
       }
 
       .enabled {
@@ -128,7 +134,7 @@
       function makeField(labelText, value, onChange, options = {}) {
         const label = document.createElement("label");
         const caption = document.createElement("span");
-        const input = document.createElement(options.select ? "select" : "input");
+        const input = document.createElement(options.select ? "select" : options.multiline ? "textarea" : "input");
         caption.textContent = labelText;
 
         if (options.select) {
@@ -199,8 +205,8 @@
 
           const messageField = makeField("Chat message", item.message, (value) => {
             item.message = value;
-          });
-          messageField.querySelector("input").maxLength = 500;
+          }, { multiline: true });
+          messageField.querySelector("textarea").maxLength = 300;
 
           const remove = document.createElement("button");
           remove.type = "button";
