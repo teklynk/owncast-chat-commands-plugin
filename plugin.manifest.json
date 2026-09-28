@@ -2,7 +2,7 @@
   "api": "1",
   "name": "Owncast Chat Commands",
   "slug": "owncast-chat-commands",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Manage custom chat commands and timed chat messages from the Owncast admin.",
   "permissions": ["chat.send", "http.serve", "storage.fs"],
   "admin": {

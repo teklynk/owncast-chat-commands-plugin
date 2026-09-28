@@ -31,8 +31,10 @@
 
       .command {
         border: 1px solid currentColor;
-        border-radius: 4px;
         padding: 1rem;
+        background: #eff1f4;
+        border-radius: 10px;
+        border: 1px solid #f0f0f0;
       }
 
       .fields {
@@ -106,7 +108,7 @@
   </head>
   <body>
     <h1>Chat Commands</h1>
-    <p>Replies are selected at random. Set cooldown to 0 to disable it.</p>
+    <p>Create chat commands like: !donate, !rules, !support, !socials and the bot will post your reply message into chat. Add a cooldown to prevent spam.</p>
     <div id="command-list" aria-live="polite"></div>
     <div class="actions">
       <button id="add-command" type="button">Add command</button>
@@ -176,7 +178,7 @@
             commandNameRow,
             makeField("Cooldown (seconds)", command.cooldownSeconds, (value) => {
               command.cooldownSeconds = value === "" ? "" : Number(value);
-            }, { type: "number", min: 0, max: 86400 }),
+            }, { type: "number", min: 0, max: 300 }),
           );
 
           const replyField = makeField("Reply", command.message, (value) => {
